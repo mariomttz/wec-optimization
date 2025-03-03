@@ -4,3 +4,6 @@
 # Draft files
 /preprocessing/*.draft*
 /neural_network/*.draft*
+
+# Databases
+/neural_network/*.db
