@@ -1,0 +1,11 @@
+.env
+
+*.log
+
+*.ipynb
+
+.ipynb_checkpoints/
+
+.python-version
+
+etc/
