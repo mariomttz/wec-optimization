@@ -2,6 +2,7 @@
 # coding: utf-8
 
 import logging
+import joblib
 import time
 import json
 import sys
@@ -11,6 +12,7 @@ from pathlib import Path
 
 
 import pandas as pd
+import random as rd
 import numpy as np
 import optuna
 
@@ -23,21 +25,26 @@ from sklearn.model_selection import train_test_split
 from sklearn.svm import SVR
 
 
+DATA_PATH = Path('./../../../data/')
+CLEAN_FOLDER = DATA_PATH / 'clean/'
+STUDY_NAME = 'sydney_100'
+DATASET_FILE_NAME = f'{STUDY_NAME}.csv'
+RANDOM_SEED = 8
+N_TRIALS = 1000
+
+
 logging.basicConfig(
     level = logging.INFO,
     format = '%(asctime)s - %(levelname)s - %(message)s',
     handlers = [
-        logging.FileHandler('sydney_100_svm_optimization.log'),
+        logging.FileHandler(f'{STUDY_NAME}_svm_optimization.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 
 
-DATA_PATH = Path('./../../../data/')
-CLEAN_FOLDER = DATA_PATH / 'clean/'
-DATASET_FILE_NAME = 'sydney_100.csv'
-RANDOM_SEED = 8
-N_TRIALS = 3000
+np.random.seed(RANDOM_SEED)
+rd.seed(RANDOM_SEED)
 
 
 try:
@@ -84,7 +91,7 @@ def objective(trial):
         mae = mean_absolute_error(y_test, y_pred)
         
         logging.info(f'Trial {trial.number}, parámetros: {trial.params}')
-        logging.info(f'MSE: {mse}, RMSE: {rmse}, MAE: {mae}\n')
+        logging.info(f'MSE: {mse}, RMSE: {rmse}, MAE: {mae}')
     
         trial.set_user_attr('mse', mse)
         trial.set_user_attr('mae', mae)
@@ -98,8 +105,11 @@ def objective(trial):
 
 if __name__ == '__main__':
     try:
-        study = optuna.create_study(direction = 'minimize')
-
+        study = optuna.create_study(
+            sampler = optuna.samplers.TPESampler(seed = RANDOM_SEED),
+            direction = 'minimize'
+        )
+        
         start_total_trials_time = time.time()
         
         study.optimize(objective, n_trials = N_TRIALS)
@@ -112,14 +122,16 @@ if __name__ == '__main__':
         
         logging.info(f'Mejor RMSE encontrado: {study.best_value}')
         logging.info('Mejores hiperparámetros encontrados:')
-        logging.info(study.best_params)
+        
+        best_params = study.best_params
+        logging.info(best_params)
         
         df_trials = study.trials_dataframe()
         
         new_cols_names = {
             'number': 'trial_number',
             'value': 'rmse',
-            'params_C': 'c',
+            'params_C': 'C',
             'params_gamma': 'gamma',
             'params_kernel': 'kernel',
             'user_attrs_mae': 'mae',
@@ -127,12 +139,22 @@ if __name__ == '__main__':
         }
         
         df_final = df_trials.rename(columns = new_cols_names)
-        df_final = df_final[['trial_number', 'state', 'kernel', 'gamma', 'c', 'mse', 'rmse', 'mae']]
+        df_final = df_final[['trial_number', 'state', 'kernel', 'gamma', 'C', 'mse', 'rmse', 'mae']]
 
-        results_path = 'sydney_100_svm_optuna_results.csv'
+        results_path = f'{STUDY_NAME}_svm_optuna_results.csv'
         df_final.to_csv(results_path, index = False)
         
         logging.info(f"Estudio de Optuna finalizado, archivo con los resultados creado en '{results_path}'.")
+        logging.info('Entrenando el modelo con los mejores hiperparámetros encontrados.')
+
+        best_model = SVR(
+            **best_params,
+        ).fit(X_train, y_train)
+
+        model_path = f'{STUDY_NAME}_svm_best_model.joblib'
+        joblib.dump(best_model, model_path)
+
+        logging.info(f"Modelo entrenado con los mejores hiperparámetros encontrados guardado en '{model_path}'")
         
     except Exception as e:
         logging.critical(f'Ocurrió un error crítico durante el estudio de Optuna: {e}')

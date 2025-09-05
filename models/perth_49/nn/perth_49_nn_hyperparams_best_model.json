@@ -1,0 +1,1 @@
+{"num_layers": 4, "num_units_layer_0": 254, "num_units_layer_1": 166, "num_units_layer_2": 63, "num_units_layer_3": 182, "use_dropout": false, "dropout_rate": 0.399383063662739, "use_batchnorm": true, "use_resblocks": false, "n_epoch": 215, "lr_max": 0.00822473225195476}

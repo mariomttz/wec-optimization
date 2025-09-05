@@ -2,6 +2,8 @@
 # coding: utf-8
 
 import logging
+import joblib
+import time
 import json
 import sys
 import os
@@ -10,6 +12,8 @@ from pathlib import Path
 
 
 import pandas as pd
+import random as rd
+import numpy as np
 
 from sklearn.metrics import (
     mean_squared_error,
@@ -20,20 +24,25 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 
 
+DATA_PATH = Path('./../../../data/')
+CLEAN_FOLDER = DATA_PATH / 'clean/'
+STUDY_NAME = 'perth_100'
+DATASET_FILE_NAME = f'{STUDY_NAME}.csv'
+RANDOM_SEED = 8
+
+
 logging.basicConfig(
     level = logging.INFO,
     format = '%(asctime)s - %(levelname)s - %(message)s',
     handlers = [
-        logging.FileHandler('perth_100_lr_optimization.log'),
+        logging.FileHandler(f'{STUDY_NAME}_lr.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 
 
-DATA_PATH = Path('./../../../data/')
-CLEAN_FOLDER = DATA_PATH / 'clean/'
-DATASET_FILE_NAME = 'perth_100.csv'
-RANDOM_SEED = 8
+np.random.seed(RANDOM_SEED)
+rd.seed(RANDOM_SEED)
 
 
 try:
@@ -93,10 +102,16 @@ try:
 
     df_final = pd.DataFrame(results_data)
     
-    results_path = 'perth_100_lr_results.csv'
+    results_path = f'{STUDY_NAME}_lr_results.csv'
     df_final.to_csv(results_path, index = False)
     
     logging.info(f"Archivo con los resultados creado en '{results_path}'.")
+    logging.info('Entrenando el modelo.')
+
+    model_path = f'{STUDY_NAME}_lr_best_model.joblib'
+    joblib.dump(model, model_path)
+
+    logging.info(f"Modelo entrenado guardado en '{model_path}'")
 
 except Exception as e:
     logging.error(f'Ocurrió un error al guardar los resultados: {e}')

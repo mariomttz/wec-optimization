@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 import pandas as pd
+import random as rd
 import numpy as np
 import optuna
 
@@ -23,22 +24,27 @@ import torch.nn as nn
 from torch.nn import SmoothL1Loss
 
 
+DATA_PATH = Path('./../../../data/')
+CLEAN_FOLDER = DATA_PATH / 'clean/'
+STUDY_NAME = 'sydney_100'
+DATASET_FILE_NAME = f'{STUDY_NAME}.csv'
+RANDOM_SEED = 8
+BATCH_SIZE = 256
+N_TRIALS = 1000
+
+
 logging.basicConfig(
     level = logging.INFO,
     format = '%(asctime)s - %(levelname)s - %(message)s',
     handlers = [
-        logging.FileHandler('sydney_100_nn_optimization.log'),
+        logging.FileHandler(f'{STUDY_NAME}_nn_optimization.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 
 
-DATA_PATH = Path('./../../../data/')
-CLEAN_FOLDER = DATA_PATH / 'clean/'
-DATASET_FILE_NAME = 'sydney_100.csv'
-RANDOM_SEED = 8
-BATCH_SIZE = 256
-N_TRIALS = 1000
+np.random.seed(RANDOM_SEED)
+rd.seed(RANDOM_SEED)
 
 
 class ResBlock(nn.Module):
@@ -201,7 +207,7 @@ def objective(trial):
         mae = learn.recorder.final_record[4]
 
         logging.info(f'Trial {trial.number}, parámetros: {trial.params}')
-        logging.info(f'MSE: {mse}, RMSE: {rmse}, MAE: {mae}\n')
+        logging.info(f'MSE: {mse}, RMSE: {rmse}, MAE: {mae}')
 
         trial.set_user_attr('mse', mse)
         trial.set_user_attr('rmse', rmse)
@@ -216,7 +222,10 @@ def objective(trial):
         
 if __name__ == '__main__':
     try:
-        study = optuna.create_study(direction = 'minimize')
+        study = optuna.create_study(
+            sampler = optuna.samplers.TPESampler(seed = RANDOM_SEED),
+            direction = 'minimize'
+        )
         
         start_total_trials_time = time.time()
         
@@ -252,12 +261,12 @@ if __name__ == '__main__':
 
         df_final = df_final.drop(columns = cols_to_drop)
 
-        results_path = 'sydney_100_nn_optuna_results.csv'
+        results_path = f'{STUDY_NAME}_nn_optuna_results.csv'
         df_final.to_csv(results_path, index = False)
         
         logging.info(f"Estudio de Optuna finalizado, archivo con los resultados creado en '{results_path}'.")
-
-        logging.info('Creando el modelo con los mejores hiperparámetros obtenidos.')
+        logging.info('Entrenando el modelo con los mejores hiperparámetros encontrados.')
+        
         best_params = study.best_params
         
         best_model = PowerEstimator(
@@ -289,15 +298,20 @@ if __name__ == '__main__':
             div_final = 100000.0,
             pct_start= 0.25
         )
+
+        hyperparams_path = f'{STUDY_NAME}_nn_hyperparams_best_model.json'
         
-        model_path = 'sydney_100_nn_best_model'
-        learn.save(model_path)
-        logging.info(f"El modelo con los mejores hiperparámetros obtenidos ha sido guardado en '{model_path}.pth'.")
+        with open(hyperparams_path, 'w') as f:
+            json.dump(best_params, f)
+            
+        logging.info(f"Hiperparámetros del mejor modelo guardados en '{hyperparams_path}'.")
+        
+        model_path = f'{STUDY_NAME}_nn_best_model.pth'
+        torch.save(learn.model.state_dict(), model_path)
+        
+        logging.info(f"Modelo entrenado con los mejores hiperparámetros encontrados guardado en '{model_path}'.")
 
     except Exception as e:
         logging.critical(f'Ocurrió un error crítico durante el estudio de Optuna: {e}')
         sys.exit(1)
-
-
-
 

@@ -11,6 +11,7 @@ from pathlib import Path
 
 
 import pandas as pd
+import random as rd
 import numpy as np
 import optuna
 
@@ -23,21 +24,26 @@ from sklearn.model_selection import train_test_split
 from catboost import CatBoostRegressor
 
 
+DATA_PATH = Path('./../../../data/')
+CLEAN_FOLDER = DATA_PATH / 'clean/'
+STUDY_NAME = 'perth_100'
+DATASET_FILE_NAME = f'{STUDY_NAME}.csv'
+RANDOM_SEED = 8
+N_TRIALS = 1000
+
+
 logging.basicConfig(
     level = logging.INFO,
     format = '%(asctime)s - %(levelname)s - %(message)s',
     handlers = [
-        logging.FileHandler('perth_100_catboost_optimization.log'),
+        logging.FileHandler(f'{STUDY_NAME}_catboost_optimization.log'),
         logging.StreamHandler(sys.stdout)
     ]
 )
 
 
-DATA_PATH = Path('./../../../data/')
-CLEAN_FOLDER = DATA_PATH / 'clean/'
-DATASET_FILE_NAME = 'perth_100.csv'
-RANDOM_SEED = 8
-N_TRIALS = 1000
+np.random.seed(RANDOM_SEED)
+rd.seed(RANDOM_SEED)
 
 
 try:
@@ -88,7 +94,7 @@ def objective(trial):
         mae = mean_absolute_error(y_test, y_pred)
         
         logging.info(f'Trial {trial.number}, parámetros: {trial.params}')
-        logging.info(f'MSE: {mse}, RMSE: {rmse}, MAE: {mae}\n')
+        logging.info(f'MSE: {mse}, RMSE: {rmse}, MAE: {mae}')
     
         trial.set_user_attr('mse', mse)
         trial.set_user_attr('mae', mae)
@@ -102,8 +108,11 @@ def objective(trial):
 
 if __name__ == '__main__':
     try:
-        study = optuna.create_study(direction = 'minimize')
-
+        study = optuna.create_study(
+            sampler = optuna.samplers.TPESampler(seed = RANDOM_SEED),
+            direction = 'minimize'
+        )
+        
         start_total_trials_time = time.time()
         
         study.optimize(objective, n_trials = N_TRIALS)
@@ -116,7 +125,9 @@ if __name__ == '__main__':
         
         logging.info(f'Mejor RMSE encontrado: {study.best_value}')
         logging.info('Mejores hiperparámetros encontrados:')
-        logging.info(study.best_params)
+        
+        best_params = study.best_params
+        logging.info(best_params)
         
         df_trials = study.trials_dataframe()
         
@@ -132,12 +143,34 @@ if __name__ == '__main__':
         }
         
         df_final = df_trials.rename(columns = new_cols_names)
-        df_final = df_final[['trial_number', 'state', 'iterations', 'learning_rate', 'depth', 'l2_leaf_reg', 'mse', 'rmse', 'mae']]
+        df_final = df_final[
+            ['trial_number',
+             'state', 'iterations',
+             'learning_rate',
+             'depth',
+             'l2_leaf_reg',
+             'mse',
+             'rmse',
+             'mae']
+        ]
 
-        results_path = 'perth_100_catboost_optuna_results.csv'
+        results_path = f'{STUDY_NAME}_catboost_optuna_results.csv'
         df_final.to_csv(results_path, index = False)
 
         logging.info(f"Estudio de Optuna finalizado, archivo con los resultados creado en '{results_path}'.")
+        logging.info('Entrenando el modelo con los mejores hiperparámetros encontrados.')
+
+        best_model = CatBoostRegressor(
+            **best_params,
+            loss_function = 'RMSE',
+            verbose = False,
+            random_seed = RANDOM_SEED 
+        ).fit(X_train, y_train)
+
+        model_path = f'{STUDY_NAME}_catboost_best_model.cbm'
+        best_model.save_model(model_path)
+
+        logging.info(f"Modelo entrenado con los mejores hiperparámetros encontrados guardado en '{model_path}'")
 
     except Exception as e:
         logging.critical(f'Ocurrió un error crítico durante el estudio de Optuna: {e}')
