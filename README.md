@@ -9,7 +9,10 @@
 
 </div>
 
-This repository contains the official source code, datasets, and results for the research paper **"Optimization of Wave Energy Farms Using Surrogate Models and Metaheuristics"**. Our work focuses on optimizing the spatial placement of Wave Energy Converters (WECs) to maximize the power output of a wave farm.
+This repository contains the official source code, datasets, and results for the research paper **"Optimization of Wave Energy Farms Using Surrogate Models and Metaheuristics"**. Our work focuses on optimizing the spatial placement of Wave Energy Converters (WECs) to maximize the power output of a wave farm. 
+
+> [!NOTE]
+> This work was carried out with the support of the **UNAM-DGAPA-PAPIME PE101325** Program.
 
 ---
 
