@@ -161,12 +161,35 @@ This work builds upon the foundational research by Neshat et al. and utilizes th
 * **Original Paper:** [Optimisation of large wave farms using a multi-strategy evolutionary framework](https://dl.acm.org/doi/10.1145/3377930.3390235)
 * **Dataset:** [Large-scale Wave Energy Farm (UCI)](https://archive.ics.uci.edu/dataset/882/large-scale+wave+energy+farm)
 
-If you use this code or our findings in your research, please consider citing our paper (citation details to be added upon publication).
+If you use this code or our findings in your research, please consider citing our paper:
+
+```bibtex
+@InProceedings{10.1007/978-3-032-17930-2_33,
+  author="Oliveros, Mario Alberto Martinez
+  and Menchaca-M{\'e}ndez, Adriana
+  and Raggi, Miguel",
+  editor="Mart{\'i}nez-Villase{\~{n}}or, Lourdes
+  and V{\'a}zquez, Roberto A.
+  and Ochoa-Ruiz, Gilberto
+  and Montes Rivera, Mart{\'i}n
+  and Zapotecas-Mart{\'i}nez, Sa{\'u}l
+  and Barr{\'o}n-Estrada, Mar{\'i}a Luc{\'i}a
+  and Mezura Montes, Efr{\'e}n
+  and Gomez Chavez, Arturo",
+  title="Optimization of Wave Energy Farms Using Surrogate Models and Metaheuristics",
+  booktitle="Advances in Computational Intelligence. MICAI 2025 International Workshops",
+  year="2026",
+  publisher="Springer Nature Switzerland",
+  address="Cham",
+  pages="459--470",
+  isbn="978-3-032-17930-2"
+}
+```
 
 ---
 
 ## 📧 Contact
 
-* **Mario A. Martinez Oliveros:** `mttzoma@gmail.com`
+* **Mario A. Martinez Oliveros:** `mamartinez@enesmorelia.unam.mx`
 * **Dr. Adriana Menchaca Méndez:** `amenchaca@enesmorelia.unam.mx`
 * **Dr. Miguel Raggi Pérez:** `mraggi@enesmorelia.unam.mx`
