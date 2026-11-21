@@ -54,7 +54,7 @@ The repository is organized as follows:
 ├── data/                  # Contains raw and cleaned datasets.
 │   ├── raw/               # Original data from the UCI repository.
 │   └── clean/             # Processed data used for model training.
-├── etc/                   # Utility scripts for analysis and file management.
+├── docs/                  # Additional documentation, such as the findings of the post-publication review.
 ├── models/                # ML models, training scripts, and results.
 │   ├── perth_49/
 │   ├── perth_100/
@@ -151,6 +151,9 @@ Our approach significantly outperformed the results from the original study that
 | Sydney 100  | 7.36 MW                           | **7.90 MW**                         | +7.34%       |
 
 _Comparison of maximum power output (MW)._
+
+> [!IMPORTANT]
+> The values above are predictions of the surrogate model, not results from the hydrodynamic simulator. A post-publication review found that the best configurations exploit the absence of a minimum buoy distance, so these values are extrapolations beyond the training data. See [docs/findings.md](docs/findings.md) for details.
 
 ---
 
