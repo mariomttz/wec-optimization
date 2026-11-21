@@ -122,9 +122,7 @@ def m_best(
     high: np.array,
     use_box_constraints: bool
 ) -> np.array:
-    pop.sort(key = lambda x: x[1])
-    
-    best = pop[0]
+    best = min(pop, key = lambda x: x[1])
     r1, r2 = rd.sample(population = pop, k = 2)
     v = best[0] + F*(r1[0] - r2[0])
 
@@ -155,9 +153,9 @@ def c_exp(
     v: np.array,
     CR: float
 ) -> np.array:
-    u = np.zeros_like(x)
+    u = x.copy()
     n = x.shape[0]
-    i_rand = rd.randint(0, n)
+    i_rand = rd.randint(0, n - 1)
     L_rand = rd.randint(1, n)
 
     for i in range(n):
@@ -168,10 +166,6 @@ def c_exp(
         else:
             break
 
-    for i in range(n):
-        if u[i] == 0:
-            u[i] = x[i]
-            
     return u
 
 
